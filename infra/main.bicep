@@ -29,3 +29,12 @@ module openai 'openai.bicep' = {
     aiServiceName: 'oai-${uniqueId}'
   }
 }
+
+module apim 'apim.bicep' = {
+  scope: resourceGroup(rg.name)
+  name: 'apimDeployment'
+  params: {
+    location: location
+    apimName: 'apim-${uniqueId}'
+  }
+}
