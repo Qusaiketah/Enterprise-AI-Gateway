@@ -1,0 +1,15 @@
+# Azure CLI / Bicep temp-filer
+.azure/
+*.bicep.log
+*.azuredeploy.json
+
+# OS-filer
+.DS_Store
+thumbs.db
+
+# VS Code inställningar som kan innehålla lokala sökvägar
+.vscode/
+
+# Om du skapar parameter-filer med hemligheter i framtiden
+*.tfvars
+*.parameters.json
