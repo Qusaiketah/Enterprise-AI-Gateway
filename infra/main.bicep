@@ -2,22 +2,19 @@ targetScope = 'subscription'
 
 param location string = 'swedencentral'
 param projectPrefix string = 'ai-gateway'
-var uniqueId = uniqueString(subscription().subscriptionId, 'ai-gateway')
 
-resource rg 'Microsoft.Resources/resourceGroups@2023-07-01' = {
-  name: 'rg-${projectPrefix}-prod'
+var uniqueId = uniqueString(subscription().subscriptionId, projectPrefix)
+var rgName = 'rg-${projectPrefix}-prod'
+
+resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+  name: rgName
   location: location
 }
 
-module vault 'keyvault.bicep' = {
+resource languageAccount 'Microsoft.CognitiveServices/accounts@2023-05-01' existing = {
+  name: 'lang-ai-gateway-smart' 
   scope: resourceGroup(rg.name)
-  name: 'vaultDeployment'
-  params: {
-    location: location
-    kvName: 'kv-${uniqueId}'
-  }
 }
-
 
 module apim 'apim.bicep' = {
   scope: resourceGroup(rg.name)
@@ -28,20 +25,15 @@ module apim 'apim.bicep' = {
   }
 }
 
-module openai 'openai.bicep' = {
-  scope: resourceGroup(rg.name)
-  name: 'openaiDeployment'
-  params: {
-    location: location
-    aiServiceName: 'oai-${uniqueId}'
-  }
-}
-
 module api 'api.bicep' = {
   scope: resourceGroup(rg.name)
   name: 'apiDeployment'
   params: {
-    apimName: apim.outputs.apimName
-    openAiEndpoint: 'https://oai-${uniqueId}.openai.azure.com/'
+    apimName: 'apim-${uniqueId}'
+    // FIX: Lägg till /openai i slutet här (utan sista snedstreck)
+    openAiEndpoint: 'https://oai-${uniqueId}.openai.azure.com/openai' 
+    languageEndpoint: 'https://lang-ai-gateway-smart.cognitiveservices.azure.com'
+    languageKey: languageAccount.listKeys().key1
   }
+  dependsOn: [ apim ]
 }

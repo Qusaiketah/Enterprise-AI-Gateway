@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Gateway Sandbox - Intelligent Maskering</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #f4f7f9; color: #333; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #0078d4; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        p { color: #666; font-size: 0.95em; }
+        textarea { width: 100%; height: 120px; padding: 12px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; resize: vertical; }
+        button { background: #0078d4; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; font-weight: bold; transition: background 0.2s; }
+        button:hover { background: #005a9e; }
+        #resultContainer { margin-top: 25px; display: none; }
+        .status-box { padding: 12px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; border: 1px solid #ccc; }
+        .status-success { background: #dff6dd; color: #107c10; border-color: #107c10; }
+        .status-loading { background: #fff4ce; color: #847545; border-color: #847545; }
+        #aiResponse { background: #f9f9f9; padding: 20px; border-left: 5px solid #0078d4; border-radius: 4px; line-height: 1.6; font-size: 16px; min-height: 50px; }
+        .info-tag { font-size: 0.8em; color: #999; margin-top: 10px; display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Gateway Sandbox</h1>
+        <p>Här testar vi din <strong>Intelligenta Dörrvakt</strong>. Skriv vad som helst – namn, adresser, personnummer eller telefonnummer. Allt maskeras av AI-hjärnan innan det når OpenAI.</p>
+        
+        <textarea id="userInput" placeholder="Ex: Hej, jag heter Qusai och bor på Sveavägen 1. Mitt personnummer är 19950101-1234. Vad kan du berätta om min gata?"></textarea>
+        <button onclick="testGateway()">Skicka till AI Gateway</button>
+
+        <div id="resultContainer">
+            <div id="status" class="status-box"></div>
+            <div id="aiResponse"></div>
+            <span class="info-tag">✔ Din data tvättades med Azure AI Language (PII Recognition) innan den nådde OpenAI.</span>
+        </div>
+    </div>
+
+    <script>
+        async function testGateway() {
+            const input = document.getElementById('userInput').value;
+            const resultContainer = document.getElementById('resultContainer');
+            const statusDiv = document.getElementById('status');
+            const aiResponseDiv = document.getElementById('aiResponse');
+            
+            if (!input.trim()) {
+                alert("Vänligen skriv något först!");
+                return;
+            }
+
+            // Visa laddningsläge
+            resultContainer.style.display = 'block';
+            statusDiv.className = 'status-box status-loading';
+            statusDiv.innerText = "Dörrvakten analyserar och tvättar din text...";
+            aiResponseDiv.innerText = "Väntar på svar från AI:n...";
+
+            // DIN KONFIGURATION
+            // URL:en pekar nu på den riktiga OpenAI-vägen genom din APIM
+            // Ändra '/gpt-4o/' till det namn som står i portalen
+// Nu räcker det med att bara anropa dörrvaktens "entré"
+const apiUrL = "https://apim-765xzhtintwcs.azure-api.net/openai"; 
+    const apiKey = "7fac57da91884a109b03a1dde6064b76";
+
+    try {
+        const response = await fetch(apiUrL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Ocp-Apim-Subscription-Key': apiKey
+            },
+            body: JSON.stringify({
+                messages: [
+                    { role: "user", content: input } // Detta format förväntar sig dörrvakten nu
+                ]
+            })
+        });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const content = data.choices[0].message.content;
+                    
+                    statusDiv.className = 'status-box status-success';
+                    statusDiv.innerText = "Status: 200 OK - Din data maskerades framgångsrikt!";
+                    
+                    // Visa AI:ns svar
+                    aiResponseDiv.innerHTML = "<strong>Svar från AI (som bara såg tvättad data):</strong><br><br>" + content;
+                } else {
+                    const errorMsg = await response.text();
+                    statusDiv.className = 'status-box';
+                    statusDiv.innerText = "Fel: " + response.status;
+                    aiResponseDiv.innerText = "Detaljer: " + errorMsg;
+                }
+                
+            } catch (error) {
+                statusDiv.className = 'status-box';
+                statusDiv.innerText = "Nätverksfel";
+                aiResponseDiv.innerText = error.message;
+            }
+        }
+    </script>
+</body>
+</html>
