@@ -4,12 +4,10 @@ param location string = 'swedencentral'
 param projectPrefix string = 'ai-gateway'
 var uniqueId = uniqueString(subscription().subscriptionId, 'ai-gateway')
 
-
 resource rg 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   name: 'rg-${projectPrefix}-prod'
   location: location
 }
-
 
 module vault 'keyvault.bicep' = {
   scope: resourceGroup(rg.name)
@@ -21,6 +19,15 @@ module vault 'keyvault.bicep' = {
 }
 
 
+module apim 'apim.bicep' = {
+  scope: resourceGroup(rg.name)
+  name: 'apimDeployment'
+  params: {
+    location: location
+    apimName: 'apim-${uniqueId}'
+  }
+}
+
 module openai 'openai.bicep' = {
   scope: resourceGroup(rg.name)
   name: 'openaiDeployment'
@@ -30,11 +37,11 @@ module openai 'openai.bicep' = {
   }
 }
 
-module apim 'apim.bicep' = {
+module api 'api.bicep' = {
   scope: resourceGroup(rg.name)
-  name: 'apimDeployment'
+  name: 'apiDeployment'
   params: {
-    location: location
-    apimName: 'apim-${uniqueId}'
+    apimName: apim.outputs.apimName
+    openAiEndpoint: 'https://oai-${uniqueId}.openai.azure.com/'
   }
 }

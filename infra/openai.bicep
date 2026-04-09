@@ -23,11 +23,12 @@ resource gptModel 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' 
     model: {
       format: 'OpenAI'
       name: 'gpt-4o'
-      version: '2024-11-20'
+      version: '2024-11-20' 
     }
   }
   sku: {
     name: 'Standard'
-    capacity: 10 
+    capacity: 10
   }
 }
+
